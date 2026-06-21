@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Reports - Smart Waste Management{% endblock %}
+{% block page_title %}Reports &amp; Analytics{% endblock %}
+
+{% block content %}
+
+<div class="card panel-card mb-3">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <ul class="nav nav-pills">
+            <li class="nav-item"><a class="nav-link {{ 'active' if period == 'daily' }}" href="{{ url_for('reports.index', period='daily') }}">Daily</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'active' if period == 'weekly' }}" href="{{ url_for('reports.index', period='weekly') }}">Weekly</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'active' if period == 'monthly' }}" href="{{ url_for('reports.index', period='monthly') }}">Monthly</a></li>
+        </ul>
+        <a href="{{ url_for('reports.download', period=period) }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-pdf"></i> Download PDF Report
+        </a>
+    </div>
+</div>
+
+<p class="text-muted mb-3">{{ label }}</p>
+
+<!-- Summary stat cards -->
+<div class="row g-3 mb-4">
+    {% for key, value in summary_stats.items() %}
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-success-soft"><i class="bi bi-clipboard-data text-success"></i></div>
+            <div>
+                <div class="stat-value">{{ value }}</div>
+                <div class="stat-label">{{ key }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Bin utilization chart -->
+    <div class="col-lg-7">
+        <div class="card panel-card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart"></i> Bin Utilization (Top 10)</div>
+            <div class="card-body">
+                <canvas id="utilizationChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- AI trend analytics -->
+    <div class="col-lg-5">
+        <div class="card panel-card h-100">
+            <div class="card-header"><i class="bi bi-robot"></i> AI Fill-Rate Predictions</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr><th>Bin</th><th>Rate (%/hr)</th><th>Time to 80%</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in predictions[:8] %}
+                        <tr>
+                            <td>{{ p.bin_code }}</td>
+                            <td>{{ p.fill_rate_per_hour }}</td>
+                            <td>{{ p.hours_to_alert }}h</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bin utilization table -->
+<div class="card panel-card mb-4">
+    <div class="card-header"><i class="bi bi-table"></i> Bin Details</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead><tr>{% for h in bin_rows[0] %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in bin_rows[1:] %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- Collection history table -->
+<div class="card panel-card">
+    <div class="card-header"><i class="bi bi-list-check"></i> Collection History</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead><tr>{% for h in collection_rows[0] %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in collection_rows[1:] %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No collection records in this period.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const topBinLabels = {{ top_bins | map(attribute='bin_code') | list | tojson }};
+    const topBinData = {{ top_bins | map(attribute='fill_level') | map('float') | list | tojson }};
+
+    new Chart(document.getElementById('utilizationChart'), {
+        type: 'bar',
+        data: {
+            labels: topBinLabels,
+            datasets: [{
+                label: 'Fill Level (%)',
+                data: topBinData,
+                backgroundColor: topBinData.map(v => v >= 80 ? '#e53935' : v >= 30 ? '#fbc02d' : '#43a047'),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: { x: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+{% endblock %}

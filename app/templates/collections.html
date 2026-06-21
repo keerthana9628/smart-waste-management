@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Collections - Smart Waste Management{% endblock %}
+{% block page_title %}Collection Management{% endblock %}
+
+{% block content %}
+
+{% if current_user.is_admin() %}
+<div class="card panel-card mb-3">
+    <div class="card-header">
+        <i class="bi bi-plus-circle"></i> Create Collection Schedule
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('collections.create') }}" class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label">Bin</label>
+                <select name="bin_id" class="form-select" required>
+                    {% for bin in bins %}
+                    <option value="{{ bin.id }}">{{ bin.bin_code }} - {{ bin.location }} ({{ bin.fill_level }}%)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label">Assign Collector</label>
+                <select name="collector_id" class="form-select">
+                    <option value="">Unassigned</option>
+                    {% for c in collectors %}
+                    <option value="{{ c.id }}">{{ c.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label">Date</label>
+                <input type="date" name="scheduled_date" class="form-control" required>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label">Time</label>
+                <input type="time" name="scheduled_time" class="form-control">
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-calendar-plus"></i> Schedule
+                </button>
+            </div>
+            <div class="col-12">
+                <input type="text" name="notes" class="form-control" placeholder="Notes (optional)">
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <ul class="nav nav-pills">
+        <li class="nav-item"><a class="nav-link {{ 'active' if status_filter == '' }}" href="{{ url_for('collections.index') }}">All</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if status_filter == 'pending' }}" href="{{ url_for('collections.index', status='pending') }}">Pending</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if status_filter == 'in_progress' }}" href="{{ url_for('collections.index', status='in_progress') }}">In Progress</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if status_filter == 'completed' }}" href="{{ url_for('collections.index', status='completed') }}">Completed</a></li>
+        <li class="nav-item"><a class="nav-link {{ 'active' if status_filter == 'missed' }}" href="{{ url_for('collections.index', status='missed') }}">Missed</a></li>
+    </ul>
+</div>
+
+<div class="card panel-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Bin</th>
+                    <th>Collector</th>
+                    <th>Status</th>
+                    <th>Waste (kg)</th>
+                    <th>Notes</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in collections %}
+                <tr>
+                    <td>{{ c.scheduled_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ c.scheduled_time.strftime('%H:%M') if c.scheduled_time else '-' }}</td>
+                    <td><strong>{{ c.bin.bin_code }}</strong> <br><small class="text-muted">{{ c.bin.location }}</small></td>
+                    <td>{{ c.collector.full_name if c.collector else 'Unassigned' }}</td>
+                    <td>
+                        <span class="badge
+                            {{ 'bg-success' if c.status == 'completed'
+                               else 'bg-primary' if c.status == 'in_progress'
+                               else 'bg-secondary' if c.status == 'missed'
+                               else 'bg-warning text-dark' }}">
+                            {{ c.status.replace('_', ' ').title() }}
+                        </span>
+                    </td>
+                    <td>{{ c.waste_collected_kg if c.waste_collected_kg else '-' }}</td>
+                    <td><small>{{ c.notes or '-' }}</small></td>
+                    <td class="text-end">
+                        {% if c.status not in ['completed', 'missed'] %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                Update
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <form method="POST" action="{{ url_for('collections.update_status', collection_id=c.id) }}">
+                                        <input type="hidden" name="status" value="in_progress">
+                                        <button type="submit" class="dropdown-item">Mark In Progress</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('collections.update_status', collection_id=c.id) }}" class="px-3 py-2">
+                                        <input type="hidden" name="status" value="completed">
+                                        <div class="input-group input-group-sm mb-2">
+                                            <span class="input-group-text">kg</span>
+                                            <input type="number" step="0.1" name="waste_collected_kg" class="form-control" placeholder="Waste collected">
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-success w-100">Mark Completed</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('collections.update_status', collection_id=c.id) }}">
+                                        <input type="hidden" name="status" value="missed">
+                                        <button type="submit" class="dropdown-item text-danger">Mark Missed</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                        {% if current_user.is_admin() %}
+                        <form method="POST" action="{{ url_for('collections.delete', collection_id=c.id) }}" class="d-inline"
+                              onsubmit="return confirm('Delete this schedule?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No collection records found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

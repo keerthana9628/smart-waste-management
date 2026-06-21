@@ -1,0 +1,305 @@
+/* ============================================================
+   Smart Waste Management System - Stylesheet
+   Theme: Green & Eco-friendly | Responsive | Dark mode support
+   ============================================================ */
+
+:root {
+    --eco-primary: #2e7d32;
+    --eco-primary-dark: #1b5e20;
+    --eco-primary-light: #66bb6a;
+    --eco-bg: #f4f7f3;
+    --eco-card-bg: #ffffff;
+    --eco-text: #1f2d20;
+    --eco-text-muted: #6b7a6d;
+    --eco-border: #e0e6df;
+    --sidebar-width: 250px;
+}
+
+[data-bs-theme="dark"] {
+    --eco-bg: #121a13;
+    --eco-card-bg: #1c261d;
+    --eco-text: #e8f0e9;
+    --eco-text-muted: #9db0a0;
+    --eco-border: #2c3a2d;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Roboto, -apple-system, Arial, sans-serif;
+    background-color: var(--eco-bg);
+    color: var(--eco-text);
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--eco-primary-dark), var(--eco-primary));
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: transform 0.25s ease;
+}
+
+.sidebar-brand {
+    padding: 1.25rem 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.sidebar-brand i { font-size: 1.6rem; }
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0.75rem 0;
+    overflow-y: auto;
+}
+
+.sidebar-nav .nav-link,
+.sidebar-footer .nav-link {
+    color: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1.25rem;
+    border-radius: 0;
+    font-size: 0.95rem;
+    transition: background-color 0.15s ease;
+}
+
+.sidebar-nav .nav-link i,
+.sidebar-footer .nav-link i { font-size: 1.1rem; width: 1.3rem; }
+
+.sidebar-nav .nav-link:hover,
+.sidebar-footer .nav-link:hover {
+    background-color: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: rgba(255,255,255,0.18);
+    color: #fff;
+    font-weight: 600;
+    border-left: 4px solid #fff;
+}
+
+.sidebar-footer {
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding: 0.75rem 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1.25rem;
+}
+
+.user-info i { font-size: 2rem; }
+.user-name { font-weight: 600; font-size: 0.9rem; }
+.user-role { font-size: 0.75rem; opacity: 0.75; }
+
+.logout-link { color: #ffcdd2 !important; }
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    background-color: var(--eco-card-bg);
+    border-bottom: 1px solid var(--eco-border);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.page-title { color: var(--eco-text); }
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-area {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.panel-card, .card {
+    background-color: var(--eco-card-bg);
+    border: 1px solid var(--eco-border);
+    border-radius: 0.75rem;
+}
+
+.panel-card .card-header, .card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--eco-border);
+    font-weight: 600;
+    color: var(--eco-primary);
+    padding: 0.85rem 1.1rem;
+}
+
+.panel-card .card-footer {
+    background-color: transparent;
+    border-top: 1px solid var(--eco-border);
+}
+
+.stat-card {
+    background-color: var(--eco-card-bg);
+    border: 1px solid var(--eco-border);
+    border-radius: 0.75rem;
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    height: 100%;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.stat-label { font-size: 0.8rem; color: var(--eco-text-muted); }
+
+.bg-primary-soft { background-color: rgba(13, 110, 253, 0.12); }
+.bg-success-soft { background-color: rgba(46, 125, 50, 0.14); }
+.bg-danger-soft  { background-color: rgba(229, 57, 53, 0.14); }
+.bg-warning-soft { background-color: rgba(251, 192, 45, 0.18); }
+.bg-secondary-soft { background-color: rgba(108, 117, 125, 0.14); }
+
+/* ============================================================
+   Login page
+   ============================================================ */
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--eco-primary-dark), var(--eco-primary-light));
+    padding: 1rem;
+}
+
+.login-card {
+    background-color: #fff;
+    border-radius: 1rem;
+    padding: 2.25rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.2);
+}
+
+.login-brand {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-brand i {
+    font-size: 2.75rem;
+    color: var(--eco-primary);
+}
+
+.login-brand h3 {
+    margin: 0.5rem 0 0.25rem;
+    color: var(--eco-primary-dark);
+    font-weight: 700;
+}
+
+.login-hint {
+    text-align: center;
+    border-top: 1px solid var(--eco-border);
+    padding-top: 0.75rem;
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+.table { color: var(--eco-text); }
+.table > :not(caption) > * > * {
+    background-color: transparent;
+    color: var(--eco-text);
+    border-bottom-color: var(--eco-border);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* ============================================================
+   Misc
+   ============================================================ */
+.nav-pills .nav-link.active {
+    background-color: var(--eco-primary);
+}
+
+.nav-pills .nav-link {
+    color: var(--eco-text-muted);
+}
+
+.btn-success {
+    background-color: var(--eco-primary);
+    border-color: var(--eco-primary);
+}
+
+.btn-success:hover {
+    background-color: var(--eco-primary-dark);
+    border-color: var(--eco-primary-dark);
+}
+
+.btn-outline-success {
+    color: var(--eco-primary);
+    border-color: var(--eco-primary);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--eco-primary);
+    color: #fff;
+}

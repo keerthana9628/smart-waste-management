@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Smart Waste Management{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary-soft"><i class="bi bi-trash3 text-primary"></i></div>
+            <div>
+                <div class="stat-value">{{ total_bins }}</div>
+                <div class="stat-label">Total Bins</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-success-soft"><i class="bi bi-check-circle text-success"></i></div>
+            <div>
+                <div class="stat-value">{{ active_bins }}</div>
+                <div class="stat-label">Active Bins</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-danger-soft"><i class="bi bi-exclamation-triangle text-danger"></i></div>
+            <div>
+                <div class="stat-value">{{ full_bins }}</div>
+                <div class="stat-label">Full Bins</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-warning-soft"><i class="bi bi-truck text-warning"></i></div>
+            <div>
+                <div class="stat-value">{{ pending_collections }}</div>
+                <div class="stat-label">Pending Collections</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Bin fill levels chart -->
+    <div class="col-lg-7">
+        <div class="card panel-card h-100">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-line"></i> Bin Fill Levels
+            </div>
+            <div class="card-body">
+                <canvas id="binFillChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Status breakdown pie chart -->
+    <div class="col-lg-5">
+        <div class="card panel-card h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart"></i> Bin Status Breakdown
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="statusPieChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Weekly waste trend -->
+    <div class="col-lg-7">
+        <div class="card panel-card h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-up"></i> Waste Collected (Last 7 Days)
+            </div>
+            <div class="card-body">
+                <canvas id="wasteTrendChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Predictive Insights -->
+    <div class="col-lg-5">
+        <div class="card panel-card h-100">
+            <div class="card-header">
+                <i class="bi bi-robot"></i> AI Predictive Insights
+                <span class="badge bg-success-soft text-success ms-2">Smart</span>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for p in priority_bins %}
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ p.bin_code }}</strong> &mdash; {{ p.location }}<br>
+                            <small class="text-muted">
+                                Current: {{ p.current_fill_level }}% &middot;
+                                Rate: {{ p.fill_rate_per_hour }}%/hr
+                            </small>
+                        </div>
+                        <span class="badge {{ 'bg-danger' if p.hours_to_alert == 0 else 'bg-warning text-dark' }}">
+                            {% if p.hours_to_alert == 0 %}
+                                Needs collection now
+                            {% else %}
+                                ~{{ p.hours_to_alert }}h to 80%
+                            {% endif %}
+                        </span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">No predictions available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-footer text-end">
+                <a href="{{ url_for('collections.ai_schedule') }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-magic"></i> View AI Schedule
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card panel-card">
+            <div class="card-header">
+                <i class="bi bi-clock-history"></i> Recent Activities
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_activities %}
+                        <tr>
+                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ log.user.full_name if log.user else 'System' }}</td>
+                            <td><span class="badge bg-secondary-soft text-secondary">{{ log.action.replace('_', ' ').title() }}</span></td>
+                            <td>{{ log.details or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted">No recent activity.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Bin fill level chart data
+    const binLabels = {{ bins | map(attribute='bin_code') | list | tojson }};
+    const binFillData = {{ bins | map(attribute='fill_level') | map('float') | list | tojson }};
+
+    const ctxBar = document.getElementById('binFillChart');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: binLabels,
+            datasets: [{
+                label: 'Fill Level (%)',
+                data: binFillData,
+                backgroundColor: binFillData.map(v => v >= 80 ? '#e53935' : v >= 30 ? '#fbc02d' : '#43a047'),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Status pie chart
+    const ctxPie = document.getElementById('statusPieChart');
+    new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+            labels: ['Empty', 'Half Full', 'Full'],
+            datasets: [{
+                data: [{{ status_counts.empty }}, {{ status_counts.half }}, {{ status_counts.full }}],
+                backgroundColor: ['#43a047', '#fbc02d', '#e53935'],
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Weekly waste trend
+    const trendLabels = {{ daily_totals.keys() | list | tojson }};
+    const trendValues = {{ daily_totals.values() | list | tojson }};
+
+    const ctxLine = document.getElementById('wasteTrendChart');
+    new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Waste Collected (kg)',
+                data: trendValues,
+                borderColor: '#2e7d32',
+                backgroundColor: 'rgba(46, 125, 50, 0.15)',
+                fill: true,
+                tension: 0.35,
+            }]
+        },
+        options: { plugins: { legend: { display: false } } }
+    });
+</script>
+{% endblock %}

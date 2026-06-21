@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Dustbins - Smart Waste Management{% endblock %}
+{% block page_title %}Dustbin Management{% endblock %}
+
+{% block content %}
+
+<div class="card panel-card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Search by bin code or location..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="empty" {{ 'selected' if status_filter == 'empty' }}>Empty</option>
+                    <option value="half" {{ 'selected' if status_filter == 'half' }}>Half Full</option>
+                    <option value="full" {{ 'selected' if status_filter == 'full' }}>Full</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <button type="submit" class="btn btn-outline-success w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+            {% if current_user.is_admin() %}
+            <div class="col-12 col-md-2 text-md-end">
+                <a href="{{ url_for('bins.add') }}" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle"></i> Add Bin
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card panel-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Bin Code</th>
+                    <th>Location</th>
+                    <th>Capacity (L)</th>
+                    <th>Fill Level</th>
+                    <th>Status</th>
+                    <th>Waste Type</th>
+                    <th>Last Collected</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bin in bins %}
+                <tr>
+                    <td><strong>{{ bin.bin_code }}</strong></td>
+                    <td>{{ bin.location }}</td>
+                    <td>{{ bin.capacity_l }}</td>
+                    <td style="min-width: 160px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar {{ 'bg-danger' if bin.status == 'full' else 'bg-warning' if bin.status == 'half' else 'bg-success' }}"
+                                     role="progressbar" style="width: {{ bin.fill_level }}%;"></div>
+                            </div>
+                            <span>{{ bin.fill_level }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {{ 'bg-danger' if bin.status == 'full' else 'bg-warning text-dark' if bin.status == 'half' else 'bg-success' }}">
+                            {{ bin.status.replace('_', ' ').title() }}
+                        </span>
+                    </td>
+                    <td><span class="text-capitalize">{{ bin.waste_type }}</span></td>
+                    <td>{{ bin.last_collected_at.strftime('%Y-%m-%d %H:%M') if bin.last_collected_at else 'Never' }}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <form method="POST" action="{{ url_for('bins.mark_collected', bin_id=bin.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-outline-success" title="Mark Collected">
+                                    <i class="bi bi-check2-circle"></i>
+                                </button>
+                            </form>
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('bins.edit', bin_id=bin.id) }}" class="btn btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('bins.delete', bin_id=bin.id) }}" class="d-inline"
+                                  onsubmit="return confirm('Delete bin {{ bin.bin_code }}? This cannot be undone.');">
+                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No bins found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

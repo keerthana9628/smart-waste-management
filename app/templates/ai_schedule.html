@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}AI Scheduler - Smart Waste Management{% endblock %}
+{% block page_title %}AI-Optimized Collection Scheduler{% endblock %}
+
+{% block content %}
+
+<div class="card panel-card mb-3">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h6 class="mb-1"><i class="bi bi-robot text-success"></i> AI Schedule Suggestions</h6>
+            <p class="text-muted mb-0">
+                Bins are ranked by urgency using predicted fill rates (machine learning) and
+                distributed across available collectors to balance workload over the next 3 days.
+            </p>
+        </div>
+        {% if suggestions %}
+        <form method="POST" action="{{ url_for('collections.apply_ai_schedule') }}">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check2-circle"></i> Apply Suggestions
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card panel-card">
+    <div class="card-body p-0">
+        {% if suggestions %}
+        <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Bin</th>
+                    <th>Location</th>
+                    <th>Current Fill</th>
+                    <th>Urgency Score</th>
+                    <th>Suggested Date</th>
+                    <th>Assigned Collector</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in suggestions %}
+                <tr>
+                    <td><strong>{{ s.bin_code }}</strong></td>
+                    <td>{{ s.location }}</td>
+                    <td>
+                        <span class="badge {{ 'bg-danger' if s.fill_level >= 80 else 'bg-warning text-dark' }}">
+                            {{ s.fill_level }}%
+                        </span>
+                    </td>
+                    <td>{{ s.urgency_score }}</td>
+                    <td>{{ s.scheduled_date }}</td>
+                    <td>{{ s.collector_name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-emoji-smile fs-1 d-block mb-2"></i>
+            No urgent bins right now &mdash; everything is under control!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

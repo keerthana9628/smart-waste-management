@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Bin' if bin else 'Add Bin' }} - Smart Waste Management{% endblock %}
+{% block page_title %}{{ 'Edit Bin' if bin else 'Add New Bin' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card panel-card">
+            <div class="card-header">
+                <i class="bi bi-{{ 'pencil' if bin else 'plus-circle' }}"></i>
+                {{ 'Edit Bin: ' + bin.bin_code if bin else 'Add New Bin' }}
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Bin ID / Code</label>
+                            {% if bin %}
+                            <input type="text" class="form-control" value="{{ bin.bin_code }}" disabled>
+                            {% else %}
+                            <input type="text" class="form-control" name="bin_code" placeholder="e.g. BIN-013" required>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" name="location" value="{{ bin.location if bin else '' }}" placeholder="e.g. Main Gate" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Capacity (Liters)</label>
+                            <input type="number" class="form-control" name="capacity_l" value="{{ bin.capacity_l if bin else 100 }}" min="10" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fill Level (%)</label>
+                            <input type="number" class="form-control" name="fill_level" value="{{ bin.fill_level if bin else 0 }}" min="0" max="100" step="0.1" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Waste Type</label>
+                            <select class="form-select" name="waste_type">
+                                {% for wt in ['general', 'organic', 'recyclable', 'hazardous'] %}
+                                <option value="{{ wt }}" {{ 'selected' if bin and bin.waste_type == wt }}>{{ wt.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Latitude <span class="text-muted">(optional)</span></label>
+                            <input type="text" class="form-control" name="latitude" value="{{ bin.latitude if bin else '' }}" placeholder="e.g. 12.9352">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Longitude <span class="text-muted">(optional)</span></label>
+                            <input type="text" class="form-control" name="longitude" value="{{ bin.longitude if bin else '' }}" placeholder="e.g. 77.5347">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check2-circle"></i> {{ 'Save Changes' if bin else 'Add Bin' }}
+                        </button>
+                        <a href="{{ url_for('bins.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
